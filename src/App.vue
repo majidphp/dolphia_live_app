@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { usePushNotifications } from '@/composables/usePushNotifications'
 import { Toaster } from '@/components/ui/sonner'
 import BackButton from '@/components/layouts/BackButton.vue'
+import ThemeToggle from '@/components/layouts/ThemeToggle.vue'
 
 const pushNotifications = usePushNotifications()
 
@@ -23,5 +24,6 @@ onMounted(() => {
     </div>
   </div>
   <BackButton />
+  <ThemeToggle />
   <Toaster />
 </template>
