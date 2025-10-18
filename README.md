@@ -5,11 +5,14 @@ A Progressive Web App (PWA) for tracking live football matches with real-time up
 ## Features
 
 - Real-time live match tracking
-- Match event updates (goals, cards, substitutions, etc.)
+- Match event updates (goals, cards, substitutions, VAR, penalties, etc.)
+- Colorful, engaging event cards with dynamic styling based on event type
 - Push notifications for goals and match events
+- Dark/Light mode toggle with persistent preference
 - Offline support with service worker
 - Installable as a native app on mobile and desktop
 - Auto-refresh every 30 seconds for matches, 15 seconds for events
+- Direct navigation to match details (independent data fetching)
 
 ## Tech Stack
 
@@ -18,25 +21,29 @@ A Progressive Web App (PWA) for tracking live football matches with real-time up
 - **Vite** - Fast build tool
 - **Pinia** - State management
 - **Vue Router** - Client-side routing
-- **Tailwind CSS 4** - Utility-first CSS framework
+- **Tailwind CSS 4** - Utility-first CSS framework with dark mode support
 - **Shadcn/ui** - Re-usable component library (reka-ui/radix-vue based)
+- **Lucide Icons** - Beautiful, consistent icon library
 - **Vite PWA Plugin** - Progressive Web App support
 - **date-fns** - Date formatting
+- **Workbox** - Service worker library for caching strategies
 
 ## Project Structure
 
 ```
 src/
 ├── components/
-│   ├── layouts/        # Layout components (Header, Nav, BackButton)
-│   └── ui/             # Shadcn UI components
+│   ├── layouts/        # Layout components (BackButton, ThemeToggle)
+│   └── ui/             # Shadcn UI components (Button, Card, Toggle, etc.)
 ├── composables/        # Vue composables (usePushNotifications)
 ├── stores/
-│   └── pages/          # Pinia stores (live-matches)
-├── utils/              # Utility functions (api, telegram)
+│   └── pages/          # Page-specific Pinia stores (live-matches, match-detail)
+├── utils/              # Utility functions (api)
+├── lib/
+│   └── utils/          # Shared utilities (cn helper for Tailwind)
 ├── views/
 │   ├── live/           # Live matches list view
-│   ├── live/:id/       # Match detail view
+│   ├── live/:id/       # Match detail view with independent data fetching
 │   └── 404/            # Not found page
 └── router/             # Vue Router configuration
 ```
@@ -88,8 +95,17 @@ Create `.env.stg` and `.env.prd` files:
 ```env
 VITE_API_BASE_URL=https://api.playdolphia.com
 VITE_VALID_DOMAIN=localhost
+VITE_CLARITY_PROJECT_ID=your_clarity_id
+VITE_VAPID_PUBLIC_KEY=your_vapid_public_key
+VITE_MODE=production
 PORT=3000
 ```
+
+**Key Environment Variables:**
+- `VITE_API_BASE_URL` - Dolphia API base URL
+- `VITE_VAPID_PUBLIC_KEY` - VAPID public key for push notifications
+- `VITE_CLARITY_PROJECT_ID` - Microsoft Clarity analytics ID (optional)
+- `VITE_MODE` - Environment mode (staging/production)
 
 ## PWA Features
 
@@ -108,11 +124,37 @@ The app uses the Dolphia API for:
 
 ## Push Notifications
 
-Push notifications are automatically requested on app load. Users will receive notifications for:
+Push notifications are automatically requested on app load (after 2 second delay). Users will receive notifications for:
 - Goals scored in live matches
 - Other match events (configurable)
 
-VAPID public key is configured in `src/composables/usePushNotifications.ts`
+The VAPID public key is loaded from the `VITE_VAPID_PUBLIC_KEY` environment variable for security.
+
+## UI Components
+
+### Layout Components
+
+- **BackButton** - Fixed top-left navigation button that appears on sub-pages
+- **ThemeToggle** - Fixed top-right button to switch between light/dark mode
+  - Moon icon in light mode (click to switch to dark)
+  - Sun icon in dark mode (click to switch to light)
+  - Theme preference saved to localStorage
+
+### Event Cards
+
+Match events are displayed with colorful, dynamic cards:
+- **Goals**: Green gradient with target icon
+- **Yellow Cards**: Yellow gradient with warning triangle icon
+- **Red Cards**: Red gradient with alert octagon icon
+- **VAR**: Purple gradient with brain icon
+- **Substitutions**: Blue gradient with arrows icon
+- **Penalties**: Orange gradient with target icon
+
+Each card includes:
+- Player name and team name
+- Event time badge
+- Assist information (when available)
+- Smooth animations and hover effects
 
 ## License
 
