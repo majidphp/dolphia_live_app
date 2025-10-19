@@ -90,6 +90,8 @@ export default (params: any) => {
               }
             }
           ]
+          ,
+          importScripts: ['/sw-push.js']
         },
         devOptions: {
           enabled: true

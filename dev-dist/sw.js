@@ -69,6 +69,7 @@ if (!self.define) {
 }
 define(['./workbox-f8b0af05'], (function (workbox) { 'use strict';
 
+  importScripts("/sw-push.js");
   self.skipWaiting();
   workbox.clientsClaim();
 

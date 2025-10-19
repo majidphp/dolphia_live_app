@@ -21,7 +21,6 @@ export const usePushNotifications = () => {
 
   const requestPermission = async (): Promise<boolean> => {
     if (!('Notification' in window)) {
-      console.warn('Notifications not supported')
       return false
     }
 
@@ -37,13 +36,11 @@ export const usePushNotifications = () => {
 
   const subscribe = async (): Promise<boolean> => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('Push notifications not supported')
       return false
     }
 
     try {
       const registration = await navigator.serviceWorker.ready
-
       const granted = await requestPermission()
       if (!granted) return false
 
@@ -57,9 +54,6 @@ export const usePushNotifications = () => {
           applicationServerKey
         })
         isNew = true
-        console.log('New push subscription created')
-      } else {
-        console.log('Existing push subscription found')
       }
 
       if (isNew && subscription) {
@@ -67,7 +61,6 @@ export const usePushNotifications = () => {
           method: 'POST',
           body: { subscription: subscription.toJSON() }
         })
-        console.log('Subscription sent to server')
       }
 
       isSubscribed.value = true
