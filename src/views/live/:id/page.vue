@@ -5,6 +5,7 @@ import { useMatchDetailStore, type MatchEvent } from '@/stores/pages/match-detai
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2, Goal, AlertTriangle, AlertOctagon, Brain, ArrowLeftRight, Target, Circle } from 'lucide-vue-next'
 import { format } from 'date-fns'
+import { getMatchStyle } from '../utils'
 
 const route = useRoute()
 const store = useMatchDetailStore()
@@ -117,7 +118,11 @@ onUnmounted(() => {
     <!-- Match card -->
     <Card
       v-if="store.match"
-      class="mb-4 border-[rgba(0,200,255,0.2)] bg-[rgba(0,200,255,0.08)]"
+      class="mb-4"
+      :style="{
+        backgroundColor: getMatchStyle(store.match.status).background,
+        borderColor: getMatchStyle(store.match.status).border
+      }"
     >
       <CardContent class="p-4">
         <div class="flex justify-between items-center mb-2">
@@ -130,8 +135,14 @@ onUnmounted(() => {
             <span class="font-semibold text-sm">{{ store.match.team1_name }}</span>
           </div>
 
-          <div class="px-4 text-lg font-bold text-[#00c8ff] drop-shadow-[0_0_8px_rgba(0,200,255,0.6)]">
-            {{ store.match.team1_score }} - {{ store.match.team2_score }}
+          <div
+            class="px-4 text-lg font-bold"
+            :style="{
+              color: getMatchStyle(store.match.status).scoreColor,
+              filter: `drop-shadow(0 0 8px ${getMatchStyle(store.match.status).scoreGlow})`
+            }"
+          >
+            {{ store.match.team1_score ?? '-' }} - {{ store.match.team2_score ?? '-' }}
           </div>
 
           <div class="flex items-center gap-2 flex-1 justify-end">

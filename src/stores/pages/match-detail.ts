@@ -6,14 +6,15 @@ export interface LiveMatch {
   team1_id: number
   team1_name: string
   team1_flag: string
-  team1_score: number
+  team1_score: number | null
   team2_id: number
   team2_name: string
   team2_flag: string
-  team2_score: number
+  team2_score: number | null
   league_id: number
   league_name: string
   match_start_time: string
+  status: 'Live' | 'Upcoming' | 'Ended'
 }
 
 export interface MatchEvent {

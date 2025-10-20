@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLiveMatchesStore } from '@/stores/pages/live-matches'
 import { Card, CardContent } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 import { Loader2 } from 'lucide-vue-next'
 import { format } from 'date-fns'
+import { getMatchStyle } from './utils'
 
 const router = useRouter()
 const store = useLiveMatchesStore()
@@ -21,6 +23,8 @@ const formatTime = (dateTimeStr: string) => {
 const openMatch = (match: any) => {
   router.push(`/live/${match.id}`)
 }
+
+const matchGroups = computed(() => store.matchesByStatus)
 
 onMounted(() => {
   store.startMatchesPolling()
@@ -49,43 +53,176 @@ onUnmounted(() => {
     </div>
 
     <div class="flex flex-col gap-4">
-      <Card
-        v-for="match in store.matches"
-        :key="match.id"
-        class="cursor-pointer hover:bg-[rgba(0,200,255,0.15)] transition-colors border-[rgba(0,200,255,0.2)] bg-[rgba(0,200,255,0.08)]"
-        @click="openMatch(match)"
-      >
-        <CardContent class="p-4">
-          <div class="flex justify-between items-center mb-2">
-            <div class="flex items-center gap-2 flex-1">
-              <img
-                :src="match.team1_flag"
-                :alt="match.team1_name"
-                class="w-6 h-6 rounded-full object-cover border border-white/10"
-              />
-              <span class="font-semibold text-sm">{{ match.team1_name }}</span>
+      <!-- Live Matches -->
+      <template v-if="matchGroups.live.length > 0">
+        <div class="flex items-center gap-2 mb-1">
+          <h2 class="text-sm font-semibold text-green-500">Live Matches</h2>
+          <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+        </div>
+        <Card
+          v-for="match in matchGroups.live"
+          :key="match.id"
+          class="cursor-pointer transition-colors"
+          :style="{
+            backgroundColor: getMatchStyle(match.status).background,
+            borderColor: getMatchStyle(match.status).border
+          }"
+          @click="openMatch(match)"
+          @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = getMatchStyle(match.status).hover"
+          @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = getMatchStyle(match.status).background"
+        >
+          <CardContent class="p-4">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center gap-2 flex-1">
+                <img
+                  :src="match.team1_flag"
+                  :alt="match.team1_name"
+                  class="w-6 h-6 rounded-full object-cover border border-white/10"
+                />
+                <span class="font-semibold text-sm">{{ match.team1_name }}</span>
+              </div>
+
+              <div
+                class="px-4 text-lg font-bold"
+                :style="{
+                  color: getMatchStyle(match.status).scoreColor,
+                  filter: `drop-shadow(0 0 8px ${getMatchStyle(match.status).scoreGlow})`
+                }"
+              >
+                {{ match.team1_score ?? '-' }} - {{ match.team2_score ?? '-' }}
+              </div>
+
+              <div class="flex items-center gap-2 flex-1 justify-end">
+                <span class="font-semibold text-sm text-right">{{ match.team2_name }}</span>
+                <img
+                  :src="match.team2_flag"
+                  :alt="match.team2_name"
+                  class="w-6 h-6 rounded-full object-cover border border-white/10"
+                />
+              </div>
             </div>
-  
-            <div class="px-4 text-lg font-bold text-[#00c8ff] drop-shadow-[0_0_8px_rgba(0,200,255,0.6)]">
-              {{ match.team1_score }} - {{ match.team2_score }}
+
+            <div class="flex justify-between text-xs opacity-70 flex-wrap gap-2">
+              <span>{{ formatTime(match.match_start_time) }}</span>
+              <span>{{ match.league_name }}</span>
             </div>
-  
-            <div class="flex items-center gap-2 flex-1 justify-end">
-              <span class="font-semibold text-sm text-right">{{ match.team2_name }}</span>
-              <img
-                :src="match.team2_flag"
-                :alt="match.team2_name"
-                class="w-6 h-6 rounded-full object-cover border border-white/10"
-              />
+          </CardContent>
+        </Card>
+      </template>
+
+      <!-- Separator between Live and Upcoming -->
+      <Separator v-if="matchGroups.live.length > 0 && matchGroups.upcoming.length > 0" class="my-2" />
+
+      <!-- Upcoming Matches -->
+      <template v-if="matchGroups.upcoming.length > 0">
+        <h2 class="text-sm font-semibold text-blue-500">Upcoming Matches</h2>
+        <Card
+          v-for="match in matchGroups.upcoming"
+          :key="match.id"
+          class="cursor-pointer transition-colors"
+          :style="{
+            backgroundColor: getMatchStyle(match.status).background,
+            borderColor: getMatchStyle(match.status).border
+          }"
+          @click="openMatch(match)"
+          @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = getMatchStyle(match.status).hover"
+          @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = getMatchStyle(match.status).background"
+        >
+          <CardContent class="p-4">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center gap-2 flex-1">
+                <img
+                  :src="match.team1_flag"
+                  :alt="match.team1_name"
+                  class="w-6 h-6 rounded-full object-cover border border-white/10"
+                />
+                <span class="font-semibold text-sm">{{ match.team1_name }}</span>
+              </div>
+
+              <div
+                class="px-4 text-lg font-bold"
+                :style="{
+                  color: getMatchStyle(match.status).scoreColor,
+                  filter: `drop-shadow(0 0 8px ${getMatchStyle(match.status).scoreGlow})`
+                }"
+              >
+                {{ match.team1_score ?? '-' }} - {{ match.team2_score ?? '-' }}
+              </div>
+
+              <div class="flex items-center gap-2 flex-1 justify-end">
+                <span class="font-semibold text-sm text-right">{{ match.team2_name }}</span>
+                <img
+                  :src="match.team2_flag"
+                  :alt="match.team2_name"
+                  class="w-6 h-6 rounded-full object-cover border border-white/10"
+                />
+              </div>
             </div>
-          </div>
-  
-          <div class="flex justify-between text-xs opacity-70 flex-wrap gap-2">
-            <span>{{ formatTime(match.match_start_time) }}</span>
-            <span>{{ match.league_name }}</span>
-          </div>
-        </CardContent>
-      </Card>
+
+            <div class="flex justify-between text-xs opacity-70 flex-wrap gap-2">
+              <span>{{ formatTime(match.match_start_time) }}</span>
+              <span>{{ match.league_name }}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </template>
+
+      <!-- Separator between Upcoming and Ended -->
+      <Separator v-if="matchGroups.upcoming.length > 0 && matchGroups.ended.length > 0" class="my-2" />
+
+      <!-- Ended Matches -->
+      <template v-if="matchGroups.ended.length > 0">
+        <h2 class="text-sm font-semibold text-gray-500">Ended Matches</h2>
+        <Card
+          v-for="match in matchGroups.ended"
+          :key="match.id"
+          class="cursor-pointer transition-colors"
+          :style="{
+            backgroundColor: getMatchStyle(match.status).background,
+            borderColor: getMatchStyle(match.status).border
+          }"
+          @click="openMatch(match)"
+          @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = getMatchStyle(match.status).hover"
+          @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = getMatchStyle(match.status).background"
+        >
+          <CardContent class="p-4">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center gap-2 flex-1">
+                <img
+                  :src="match.team1_flag"
+                  :alt="match.team1_name"
+                  class="w-6 h-6 rounded-full object-cover border border-white/10"
+                />
+                <span class="font-semibold text-sm">{{ match.team1_name }}</span>
+              </div>
+
+              <div
+                class="px-4 text-lg font-bold"
+                :style="{
+                  color: getMatchStyle(match.status).scoreColor,
+                  filter: `drop-shadow(0 0 8px ${getMatchStyle(match.status).scoreGlow})`
+                }"
+              >
+                {{ match.team1_score ?? '-' }} - {{ match.team2_score ?? '-' }}
+              </div>
+
+              <div class="flex items-center gap-2 flex-1 justify-end">
+                <span class="font-semibold text-sm text-right">{{ match.team2_name }}</span>
+                <img
+                  :src="match.team2_flag"
+                  :alt="match.team2_name"
+                  class="w-6 h-6 rounded-full object-cover border border-white/10"
+                />
+              </div>
+            </div>
+
+            <div class="flex justify-between text-xs opacity-70 flex-wrap gap-2">
+              <span>{{ formatTime(match.match_start_time) }}</span>
+              <span>{{ match.league_name }}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </template>
     </div>
   </div>
 </template>

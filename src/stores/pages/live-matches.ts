@@ -6,14 +6,15 @@ export interface LiveMatch {
   team1_id: number
   team1_name: string
   team1_flag: string
-  team1_score: number
+  team1_score: number | null
   team2_id: number
   team2_name: string
   team2_flag: string
-  team2_score: number
+  team2_score: number | null
   league_id: number
   league_name: string
   match_start_time: string
+  status: 'Live' | 'Upcoming' | 'Ended'
 }
 
 export interface MatchEvent {
@@ -44,6 +45,28 @@ export const useLiveMatchesStore = defineStore('liveMatches', {
     }
   }),
 
+  getters: {
+    sortedMatchesByStatus: (state) => {
+      const statusOrder = { 'Live': 0, 'Upcoming': 1, 'Ended': 2 }
+      return [...state.matches].sort((a, b) => {
+        return statusOrder[a.status] - statusOrder[b.status]
+      })
+    },
+
+    matchesByStatus: (state) => {
+      const sorted = [...state.matches].sort((a, b) => {
+        const statusOrder = { 'Live': 0, 'Upcoming': 1, 'Ended': 2 }
+        return statusOrder[a.status] - statusOrder[b.status]
+      })
+
+      return {
+        live: sorted.filter(m => m.status === 'Live'),
+        upcoming: sorted.filter(m => m.status === 'Upcoming'),
+        ended: sorted.filter(m => m.status === 'Ended')
+      }
+    }
+  },
+
   actions: {
     async fetchMatches() {
       try {
@@ -52,7 +75,11 @@ export const useLiveMatchesStore = defineStore('liveMatches', {
 
         if (Array.isArray(data)) {
           this.detectGoals(data)
-          this.matches = data
+          // Normalize status to match expected format
+          this.matches = data.map((m: any) => ({
+            ...m,
+            status: m.status === 'Live' ? 'Live' : m.status === 'Ended' ? 'Ended' : 'Upcoming'
+          }))
 
           const newScores: Record<number, { team1_score: number; team2_score: number }> = {}
           data.forEach((m: LiveMatch) => {
